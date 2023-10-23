@@ -1,0 +1,10 @@
+idf_component_register(
+    SRCS 
+       "s3_auth_header.c"
+    INCLUDE_DIRS 
+        "."
+    REQUIRES
+        "esp_http_client"
+        "mbedtls"
+        "freertos"
+    )
