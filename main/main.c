@@ -39,8 +39,8 @@ void upsert_file()
 
     char *content = "Hello AWS! 3";
     s3_params_t s3_params = {
-        .access_key = "AKIA2ZAB4IEWF6NYA2UN",
-        .secret_key = "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",
+        .access_key = MY_IAM_ACCESS_KEY,
+        .secret_key = AWS_ACCESS_SECRET,
         .host = "esp-read-write.s3.amazonaws.com",
         .region = "us-east-1",
         .canonical_uri = "/test.txt",
@@ -77,8 +77,8 @@ void download_file()
 
     char *content = "";
     s3_params_t s3_params = {
-        .access_key = "AKIA2ZAB4IEWF6NYA2UN",
-        .secret_key = "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",
+        .access_key = MY_IAM_ACCESS_KEY,
+        .secret_key = AWS_ACCESS_SECRET,
         .host = "esp-read-write.s3.amazonaws.com",
         .region = "us-east-1",
         .canonical_uri = "/test.txt",
