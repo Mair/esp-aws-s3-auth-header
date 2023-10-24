@@ -15,19 +15,12 @@ static char *TAG = "UPSERT S3";
 
 esp_err_t on_client_data(esp_http_client_event_t *evt)
 {
-    switch (evt->event_id)
-    {
-    case HTTP_EVENT_ON_DATA:
-        ESP_LOGI(TAG, "Length=%d", evt->data_len);
-        printf("%.*s\n", evt->data_len, (char *)evt->data);
-        break;
-
-    default:
-        break;
-    }
+    if (evt->event_id == HTTP_EVENT_ON_DATA)
+        ESP_LOGI(TAG, "Length=%d data %.*s\n", evt->data_len, evt->data_len, (char *)evt->data);
     return ESP_OK;
 }
 
+/************************ UPLOAD UPDATE A FILE ***************************/
 void upsert_file()
 {
     esp_http_client_config_t esp_http_client_config = {
@@ -37,9 +30,9 @@ void upsert_file()
         .crt_bundle_attach = esp_crt_bundle_attach};
     esp_http_client_handle_t client = esp_http_client_init(&esp_http_client_config);
 
-    char *content = "Hello AWS! 3";
+    char *content = "Hello AWS!";
     s3_params_t s3_params = {
-        .access_key = MY_IAM_ACCESS_KEY,
+        .access_key = AWS_ACCESS_KEY,
         .secret_key = AWS_ACCESS_SECRET,
         .host = "esp-read-write.s3.amazonaws.com",
         .region = "us-east-1",
@@ -65,7 +58,9 @@ void upsert_file()
     }
     esp_http_client_cleanup(client);
 }
+/******************************************/
 
+/**************** DOWNLOAD A FILE **************************/
 void download_file()
 {
     esp_http_client_config_t esp_http_client_config = {
@@ -77,7 +72,7 @@ void download_file()
 
     char *content = "";
     s3_params_t s3_params = {
-        .access_key = MY_IAM_ACCESS_KEY,
+        .access_key = AWS_ACCESS_KEY,
         .secret_key = AWS_ACCESS_SECRET,
         .host = "esp-read-write.s3.amazonaws.com",
         .region = "us-east-1",
@@ -102,6 +97,8 @@ void download_file()
     esp_http_client_cleanup(client);
 }
 
+/******************************************/
+
 void app_main(void)
 {
 
@@ -110,6 +107,7 @@ void app_main(void)
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     ESP_ERROR_CHECK(example_connect());
 
+    printf("upload / update file\n");
     upsert_file();
     printf("downloading file\n");
     download_file();
