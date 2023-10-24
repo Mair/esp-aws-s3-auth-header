@@ -13,5 +13,6 @@ Advantages of using AWS S3
 -	End to end encryption
 -	Fine grain security control
 -	AWS can be setup to trigger lambda functions to add data to databases, send emails or anything else you can imagine.
+
 You can find out more about s3 from https://www.youtube.com/watch?v=77lMCiiMilo
 
