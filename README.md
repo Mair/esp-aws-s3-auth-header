@@ -16,3 +16,4 @@ Advantages of using AWS S3
 
 You can find out more about s3 from https://www.youtube.com/watch?v=77lMCiiMilo
 
+TODO: Complete the DOCS steps to make this easy to use
