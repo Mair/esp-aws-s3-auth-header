@@ -7,6 +7,7 @@
 #include "esp_log.h"
 #include "s3_auth_header.h"
 #include "protocol_examples_common.h"
+#include "esp_https_ota.h"
 
 static char *TAG = "UPSERT S3";
 
@@ -24,7 +25,7 @@ esp_err_t on_client_data(esp_http_client_event_t *evt)
 void upsert_file()
 {
     esp_http_client_config_t esp_http_client_config = {
-        .url = "https://esp-read-write.s3.amazonaws.com/test.txt",
+        .url = "https://esp32-demo-bucket.s3.amazonaws.com/test.txt",
         .method = HTTP_METHOD_PUT,
         .event_handler = on_client_data,
         .crt_bundle_attach = esp_crt_bundle_attach};
@@ -34,7 +35,7 @@ void upsert_file()
     s3_params_t s3_params = {
         .access_key = AWS_ACCESS_KEY,
         .secret_key = AWS_ACCESS_SECRET,
-        .host = "esp-read-write.s3.amazonaws.com",
+        .host = "esp32-demo-bucket.s3.amazonaws.com",
         .region = "us-east-1",
         .canonical_uri = "/test.txt",
         .content = content,
@@ -64,7 +65,7 @@ void upsert_file()
 void download_file()
 {
     esp_http_client_config_t esp_http_client_config = {
-        .url = "https://esp-read-write.s3.amazonaws.com/test.txt",
+        .url = "https://esp32-demo-bucket.s3.amazonaws.com/test.txt",
         .method = HTTP_METHOD_GET,
         .event_handler = on_client_data,
         .crt_bundle_attach = esp_crt_bundle_attach};
@@ -74,7 +75,7 @@ void download_file()
     s3_params_t s3_params = {
         .access_key = AWS_ACCESS_KEY,
         .secret_key = AWS_ACCESS_SECRET,
-        .host = "esp-read-write.s3.amazonaws.com",
+        .host = "esp32-demo-bucket.s3.amazonaws.com",
         .region = "us-east-1",
         .canonical_uri = "/test.txt",
         .content = content,
@@ -98,6 +99,50 @@ void download_file()
 }
 /******************************************/
 
+/**************** Perform an OTA **************************/
+
+static esp_err_t http_client_init(esp_http_client_handle_t esp_http_client)
+{
+
+    s3_params_t s3_params = {
+        .access_key = AWS_ACCESS_KEY,
+        .secret_key = AWS_ACCESS_SECRET,
+        .host = "esp32-demo-bucket.s3.amazonaws.com",
+        .region = "us-east-1",
+        .canonical_uri = "/aws-s3-auth-headers.bin",
+        .method = "GET",
+        .should_get_time = false};
+
+    http_client_set_aws_header(esp_http_client, &s3_params);
+
+    return ESP_OK;
+}
+
+static void run_ota_task()
+{
+    while (true)
+    {
+        esp_http_client_config_t esp_http_client_config = {
+            .url = "https://esp32-demo-bucket.s3.amazonaws.com/aws-s3-auth-headers.bin",
+            .crt_bundle_attach = esp_crt_bundle_attach};
+
+        esp_https_ota_config_t esp_https_ota_config = {
+            .http_config = &esp_http_client_config,
+            .http_client_init_cb = http_client_init};
+
+        if (esp_https_ota(&esp_https_ota_config) == ESP_OK)
+        {
+            ESP_LOGI(TAG, "OTA successful");
+            printf("restarting in 3 seconds\n");
+            vTaskDelay(pdMS_TO_TICKS(3000));
+            esp_restart();
+        }
+        ESP_LOGE(TAG, "Failed to update firmware");
+    }
+}
+
+/******************************************/
+
 void app_main(void)
 {
 
@@ -108,6 +153,21 @@ void app_main(void)
 
     printf("upload / update file\n");
     upsert_file();
+
     printf("downloading file\n");
     download_file();
+
+    printf("Perform an OTA\n");
+    download_file();
+
+    const esp_partition_t *ota_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_OTA, NULL);
+    if (ota_partition == NULL)
+    {
+        printf("OTA partition not found\n");
+        return;
+    }
+    else
+    {
+        run_ota_task();
+    }
 }
