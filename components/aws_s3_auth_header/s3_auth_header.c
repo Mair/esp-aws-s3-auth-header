@@ -37,14 +37,15 @@ void http_client_set_aws_header(esp_http_client_handle_t http_client, s3_params_
 
 void calculate_s3_header(char *amz_date, char *date_stamp, s3_params_t *s3_params, char *authorization_header, char *out_payload_hash)
 {
-    // See for details http://docs.aws.amazon.com/general/latest/gr/signature-v4-examples.html#signature-v4-examples-python
+    // See for details http://docs.aws.amazon.com/general/latest/gr/signature-v4-examples.html
 
     char *signed_headers = "host;x-amz-date";
     char canonical_request_digest[65] = {};
     // step 1 create a canonical request
+    // Step 2: Create a hash of the canonical request
     create_canonical_request(signed_headers, amz_date, s3_params, canonical_request_digest, out_payload_hash);
 
-    // 3 create string to sign
+    // Step 3: Create a String to Sign
     char credential_scope[100] = {};
     sprintf(credential_scope, "%s/%s/s3/aws4_request", date_stamp, s3_params->region);
 
@@ -52,7 +53,7 @@ void calculate_s3_header(char *amz_date, char *date_stamp, s3_params_t *s3_param
     char string_to_sign[200] = {};
     sprintf(string_to_sign, "%s\n%s\n%s\n%s", algorithm, amz_date, credential_scope, canonical_request_digest);
 
-    // 4 calculate the signature
+    // Step 4: Calculate the signature
     uint8_t signature_key[32] = {};
     get_signature_key(s3_params->secret_key, date_stamp, s3_params->region, "s3", signature_key);
 
@@ -68,13 +69,14 @@ void calculate_s3_header(char *amz_date, char *date_stamp, s3_params_t *s3_param
         sprintf(signature_str, "%s%02x", temp, signature[i]);
         strcpy(temp, signature_str);
     }
-    // 5 add the signature to the request
+    // Step 5: Add the signature to the request
     sprintf(authorization_header, "%s Credential=%s/%s, SignedHeaders=%s, Signature=%s",
             algorithm, s3_params->access_key, credential_scope, signed_headers, signature_str);
 }
 
 void create_canonical_request(char *signed_headers, char *amz_date, s3_params_t *s3_params, char canonical_request_digest[65], char *out_payload_hash)
 {
+    // Step 1: Create a canonical request
     char canonical_headers[200] = {};
     sprintf(canonical_headers, "host:%s\nx-amz-date:%s\n", s3_params->host, amz_date);
 

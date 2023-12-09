@@ -96,7 +96,6 @@ void download_file()
     }
     esp_http_client_cleanup(client);
 }
-
 /******************************************/
 
 void app_main(void)
