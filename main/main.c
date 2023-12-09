@@ -11,8 +11,14 @@
 
 static char *TAG = "UPSERT S3";
 
-#define AWS_ACCESS_KEY "MY_IAM_ACCESS_KEY"
-#define AWS_ACCESS_SECRET "MY_IAM_ACCESS_SECRET"
+#define AWS_ACCESS_KEY "MY_IAM_ACCESS_KEY"                                           // your IAM access key
+#define AWS_ACCESS_SECRET "MY_IAM_ACCESS_SECRET"                                     // your IAM access secret
+#define URL "https://esp32-demo-bucket.s3.amazonaws.com/test.txt"                    // your file URL to create and read
+#define HOST "esp32-demo-bucket.s3.amazonaws.com"                                    // your bucket host
+#define REGION "us-east-1"                                                           // your bucket region
+#define CANONICAL_URI "/test.txt"                                                    // your file name
+#define OTA_URL "https://esp32-demo-bucket.s3.amazonaws.com/aws-s3-auth-headers.bin" // once you compile this code, upload the binary to your bucket and change this URL for OTA
+#define OTA_CANONICAL_URI "/aws-s3-auth-headers.bin"                                 // the name of the binary file for OTA
 
 esp_err_t on_client_data(esp_http_client_event_t *evt)
 {
@@ -25,7 +31,7 @@ esp_err_t on_client_data(esp_http_client_event_t *evt)
 void upsert_file()
 {
     esp_http_client_config_t esp_http_client_config = {
-        .url = "https://esp32-demo-bucket.s3.amazonaws.com/test.txt",
+        .url = URL,
         .method = HTTP_METHOD_PUT,
         .event_handler = on_client_data,
         .crt_bundle_attach = esp_crt_bundle_attach};
@@ -35,9 +41,9 @@ void upsert_file()
     s3_params_t s3_params = {
         .access_key = AWS_ACCESS_KEY,
         .secret_key = AWS_ACCESS_SECRET,
-        .host = "esp32-demo-bucket.s3.amazonaws.com",
-        .region = "us-east-1",
-        .canonical_uri = "/test.txt",
+        .host = HOST,
+        .region = REGION,
+        .canonical_uri = CANONICAL_URI,
         .content = content,
         .method = "PUT",
         .should_get_time = true};
@@ -65,7 +71,7 @@ void upsert_file()
 void download_file()
 {
     esp_http_client_config_t esp_http_client_config = {
-        .url = "https://esp32-demo-bucket.s3.amazonaws.com/test.txt",
+        .url = URL,
         .method = HTTP_METHOD_GET,
         .event_handler = on_client_data,
         .crt_bundle_attach = esp_crt_bundle_attach};
@@ -75,9 +81,9 @@ void download_file()
     s3_params_t s3_params = {
         .access_key = AWS_ACCESS_KEY,
         .secret_key = AWS_ACCESS_SECRET,
-        .host = "esp32-demo-bucket.s3.amazonaws.com",
-        .region = "us-east-1",
-        .canonical_uri = "/test.txt",
+        .host = HOST,
+        .region = REGION,
+        .canonical_uri = CANONICAL_URI,
         .content = content,
         .method = "GET",
         .should_get_time = false};
@@ -107,9 +113,9 @@ static esp_err_t http_client_init(esp_http_client_handle_t esp_http_client)
     s3_params_t s3_params = {
         .access_key = AWS_ACCESS_KEY,
         .secret_key = AWS_ACCESS_SECRET,
-        .host = "esp32-demo-bucket.s3.amazonaws.com",
-        .region = "us-east-1",
-        .canonical_uri = "/aws-s3-auth-headers.bin",
+        .host = HOST,
+        .region = REGION,
+        .canonical_uri = OTA_CANONICAL_URI,
         .method = "GET",
         .should_get_time = false};
 
@@ -123,7 +129,7 @@ static void run_ota_task()
     while (true)
     {
         esp_http_client_config_t esp_http_client_config = {
-            .url = "https://esp32-demo-bucket.s3.amazonaws.com/aws-s3-auth-headers.bin",
+            .url = OTA_URL,
             .crt_bundle_attach = esp_crt_bundle_attach};
 
         esp_https_ota_config_t esp_https_ota_config = {
